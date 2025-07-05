@@ -1,114 +1,231 @@
-import Image from "next/image";
+"use client";
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ProductCard } from '@/components/ProductCard';
+import { Shield, Lock, Zap, Eye, ChevronRight } from 'lucide-react';
 import { useLogin } from '@privy-io/react-auth';
 
-export default function Home() {
+interface HomepageProps {
+  onProductSelect: (product: unknown) => void;
+  onNavigateToMarketplace?: () => void;
+}
+
+export default function Homepage({ onProductSelect, onNavigateToMarketplace }: HomepageProps) {
   const { login } = useLogin();
 
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            <button
-              className="ml-2 text-sm text-blue-500 hover:underline"
-              onClick={() => {
-                login();
-              }}
-            >
-              Login with Email
-            </button>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const featuredProducts = [
+      {
+        id: '1',
+        name: 'Premium Security Suite',
+        price: '0.5 ETH',
+        image: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
+        tokenId: 'PSS-001',
+        category: 'Software',
+        description: 'Advanced security tools for your digital life.',
+        rating: 4.8,
+        reviews: 120,
+        isVerified: true,
+        isNew: false,
+        tags: ['security', 'software', 'privacy'],
+        isTrending: false,
+        blockchain: 'Ethereum',
+        seller: 'SecureTech',
+        views: 500,
+        likes: 120
+      },
+      {
+        id: '2',
+        name: 'Encrypted Hardware Wallet',
+        price: '1.2 ETH',
+        image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop',
+        tokenId: 'EHW-002',
+        category: 'Hardware',
+        tags: ['hardware', 'wallet', 'crypto'],
+        isTrending: true,
+        blockchain: 'Ethereum',
+        seller: 'CryptoVault',
+        views: 800,
+        likes: 200,
+        rating: 4.9,
+        reviews: 85,
+        isVerified: true,
+        isNew: true,
+        description: 'Securely store your cryptocurrency with this encrypted hardware wallet.',
+      },
+      {
+        id: '3',
+        name: 'Private VPN Service',
+        tags: ['vpn', 'privacy', 'service'],
+        isTrending: false,
+        blockchain: 'Polygon',
+        seller: 'PrivacyNet',
+        views: 300,
+        likes: 90,
+        price: '0.1 ETH',
+        image: 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=400&h=300&fit=crop',
+        tokenId: 'PVS-003',
+        category: 'Service',
+        description: 'Browse the internet securely and anonymously.',
+        rating: 4.7,
+        reviews: 200,
+        isVerified: true,
+      },
+      {
+        id: '4',
+        name: 'Anonymous Email Suite',
+        price: '0.3 ETH',
+        image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=300&fit=crop',
+        tokenId: 'AES-004',
+        category: 'Software',
+        description: 'Send and receive emails without compromising your identity.',
+        rating: 4.6,
+        reviews: 150,
+        isVerified: true,
+        isNew: true,
+        tags: ['email', 'software', 'privacy']
+      }
+    ];
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const trustFeatures = [
+    {
+      icon: Shield,
+      title: 'Zero-Knowledge Payments',
+      description: 'Complete transaction privacy using advanced cryptographic protocols'
+    },
+    {
+      icon: Lock,
+      title: 'End-to-End Encryption',
+      description: 'All data encrypted locally before transmission to our servers'
+    },
+    {
+      icon: Eye,
+      title: 'No Personal Data',
+      description: 'No account required. Your blockchain identity is your only credential'
+    },
+    {
+      icon: Zap,
+      title: 'Instant Settlement',
+      description: 'Blockchain-based payments settle in seconds, not days'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-background">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+          <div className="text-center">
+            <Badge className="mb-6 bg-accent text-white border-accent">
+              Privacy-First eCommerce
+            </Badge>
+            <h1 className="text-4xl lg:text-6xl max-w-4xl mx-auto mb-6 text-foreground">
+              Shop Securely with Blockchain Technology
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              Experience true privacy in eCommerce. No accounts, no tracking, no compromises. 
+              Your identity stays yours while you access premium digital products.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg"
+                className="bg-accent hover:bg-accent/90 text-white"
+                onClick={onNavigateToMarketplace}
+              >
+                Explore Products
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-border text-muted-foreground hover:bg-secondary/20"
+              >
+                Learn More
+              </Button>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+
+      {/* Trust Features */}
+      <section className="py-20 bg-secondary/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl mb-4">
+              Built for Privacy &amp; Security
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Every transaction is designed to protect your privacy while ensuring security and authenticity.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {trustFeatures.map((feature, index) => (
+              <Card key={index} className="bg-card border-border p-6 text-center">
+                <div className="w-12 h-12 bg-accent flex items-center justify-center mx-auto mb-4">
+                  <feature.icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg mb-2">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm">{feature.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <h2 className="text-3xl lg:text-4xl mb-4">Featured Products</h2>
+              <p className="text-muted-foreground">
+                Curated selection of premium privacy and security tools
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              className="border-border text-muted-foreground hover:bg-secondary/20"
+              onClick={onNavigateToMarketplace}
+            >
+              View All
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featuredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onSelect={onProductSelect}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-secondary/10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl lg:text-4xl mb-6">
+            Ready to Shop Privately?
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8">
+            Connect your wallet and start experiencing truly private eCommerce today.
+          </p>
+          <Button 
+            size="lg"
+            className="bg-accent hover:bg-accent/90 text-white"
+            onClick={() => {
+              login()
+            }
+            }
+          >
+            Connect Wallet &amp; Start Shopping
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }
