@@ -15,14 +15,31 @@ export async function GET(req: NextRequest) {
         );
     }
 
-    // Define available products (in a real app, fetch from DB or config)
-    const products = [
+    // All available products (normally from DB/config)
+    const allProducts = [
         { name: 'Pro Subscription', id: 'pro' },
         { name: 'E-Book Download', id: 'ebook' },
         { name: 'Premium Feature Unlock', id: 'premium' },
+        { name: 'Advanced Course', id: 'course' },
     ];
 
-    const productOptions = products
+    // Filter products based on ?products[]=id1&products[]=id2...
+    const productIds = searchParams.getAll('products[]');
+    const filteredProducts = productIds.length
+        ? allProducts.filter(p => productIds.includes(p.id))
+        : allProducts;
+
+    if (filteredProducts.length === 0) {
+        return new NextResponse(
+            `<html><body><h2 style="color:red;text-align:center;margin-top:20px;">No valid products found in query</h2></body></html>`,
+            {
+                status: 400,
+                headers: { 'Content-Type': 'text/html' },
+            }
+        );
+    }
+
+    const productOptions = filteredProducts
         .map(p => `<option value="${p.id}">${p.name}</option>`)
         .join('');
 

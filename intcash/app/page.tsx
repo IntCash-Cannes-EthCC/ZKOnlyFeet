@@ -72,6 +72,7 @@ export default function Homepage({ onProductSelect, onNavigateToMarketplace }: H
         rating: 4.7,
         reviews: 200,
         isVerified: true,
+        isNew: false,
       },
       {
         id: '4',

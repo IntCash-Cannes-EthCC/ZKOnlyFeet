@@ -3,9 +3,9 @@
 import { Hepta_Slab } from "next/font/google";
 import "./globals.css";
 // import { IntMaxClientProvider } from "@/components/contexts/IntMaxClientContext";
-import { PrivyProvider } from '@privy-io/react-auth';
-import { celo, sepolia } from 'viem/chains';
 import { Header } from "@/components/Header";
+import { CartSidebar } from "@/components/cart/CartOpened";
+import { PrivyWrapper } from "@/components/providers/privy/PrivyWrapper";
 
 const heptaSlab = Hepta_Slab({
   variable: "--font-geist-sans",
@@ -19,28 +19,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <PrivyProvider 
-          appId={process.env.NEXT_PUBLIC_PRIVY ?? ""}
-          clientId={process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID ?? ""}
-          config={{
-            // Create embedded wallets for users who don't have a wallet
-            embeddedWallets: {
-              ethereum: {
-                createOnLogin: 'users-without-wallets'
-              }
-            },
-            supportedChains: [sepolia, celo]
-          }}
-        >
+      <PrivyWrapper>
       <body
         className={`${heptaSlab.variable} antialiased`}
       >
         <Header />
+        <CartSidebar />
           {/* <IntMaxClientProvider> */}
             {children}
           {/* </IntMaxClientProvider> */}
       </body>
-      </PrivyProvider>
+      </PrivyWrapper>
     </html>
   );
 }
