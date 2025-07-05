@@ -1,6 +1,9 @@
 import Image from "next/image";
+import { useLogin } from '@privy-io/react-auth';
 
 export default function Home() {
+  const { login } = useLogin();
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
@@ -18,6 +21,14 @@ export default function Home() {
             <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
               app/page.tsx
             </code>
+            <button
+              className="ml-2 text-sm text-blue-500 hover:underline"
+              onClick={() => {
+                login();
+              }}
+            >
+              Login with Email
+            </button>
             .
           </li>
           <li className="tracking-[-.01em]">
