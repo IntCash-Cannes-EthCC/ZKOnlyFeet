@@ -26,10 +26,10 @@ import {
 } from 'lucide-react';
 
 interface CartCheckoutProps {
-  onBack: () => void;
-  isWalletConnected: boolean;
-  walletAddress: string;
-  onConnectWallet: () => void;
+    onBack: () => void;
+    isWalletConnected: boolean;
+    walletAddress: string;
+    onConnectWallet: () => void;
 }
 
 type CheckoutStep = 'review' | 'payment' | 'processing' | 'success' | 'error';

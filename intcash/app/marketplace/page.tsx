@@ -42,10 +42,6 @@ interface Product {
     tags: string[];
 }
 
-interface MarketplaceProps {
-    onProductSelect: (product: Product) => void;
-}
-
 // Mock data for demonstration
 const mockProducts: Product[] = [
     {
@@ -192,7 +188,7 @@ const sortOptions = [
     { value: 'trending', label: 'Trending' }
 ];
 
-export default function Marketplace({ onProductSelect }: MarketplaceProps) {
+export default function Marketplace() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All Categories');
     const [selectedBlockchain, setSelectedBlockchain] = useState('All Blockchains');
@@ -500,7 +496,7 @@ export default function Marketplace({ onProductSelect }: MarketplaceProps) {
                     >
                     <ProductCard
                         product={product}
-                        onSelect={() => onProductSelect(product)}
+                        onSelect={() => console.log(`Selected product: ${product.name}`)}
                         viewMode={viewMode}
                     />
                     </motion.div>

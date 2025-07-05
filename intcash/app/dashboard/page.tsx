@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,13 +18,18 @@ import {
     Clock,
     CheckCircle,
     Filter,
-    Search
+    Search,
+    BadgeCheck as LucideBadge
 } from 'lucide-react';
-import { useLogin, useWallets } from '@privy-io/react-auth';
-import { useFundWallet } from '@privy-io/react-auth';
+import { useLogin, useWallets, useFundWallet } from '@privy-io/react-auth';
+// import { SelfAppBuilder } from '@selfxyz/qrcode';
+import { useBalance } from 'wagmi';
+
 
 export default function UserDashboard() {
     const [showPrivateData, setShowPrivateData] = useState(false);
+    const [userVerified, setUserVerified] = useState(true); // Mock user verification status
+    const [balance, setBalance] = useState<string | null>(null);
 
     const { login } = useLogin();
 
@@ -33,6 +38,46 @@ export default function UserDashboard() {
     const { fundWallet } = useFundWallet();
 
     const walletAddress = wallets.find(wallet => wallet.address);
+
+    const result = useBalance({
+        address: walletAddress?.address as `0x${string}`,
+      })
+
+
+      useEffect(() => {
+        // Simulate fetching user verification status
+        const fetchUserVerification = async () => {
+            // Replace with actual API call to check user verification
+            // const isVerified = true; // Mocked value
+            setUserVerified(false);
+        };
+
+        const fetchBalance = async () => {
+            if (walletAddress?.address) {
+                const balance = await result.refetch();
+                setBalance(balance.data?.formatted ?? null);
+            }
+        }
+        fetchBalance();
+        fetchUserVerification();
+    }
+    , []);
+
+    // const selfApp = new SelfAppBuilder({
+    //     appName: 'My Application',
+    //     scope: 'my-application-scope',
+    //     endpoint: 'https://my-api.com/api/verify', // Your API using SelfBackendVerifier
+    //     userId: walletAddress?.address ?? '',
+    //     disclosures: {
+    //       name: true,
+    //       nationality: true,
+    //       date_of_birth: true,
+    //       passport_number: true,
+    //       minimumAge: 20,
+    //       excludedCountries: ['IRN', 'PRK'],
+    //       ofac: true,
+    //     },
+    //   }).build();
 
     const mockPurchases = [
     {
@@ -120,15 +165,17 @@ export default function UserDashboard() {
 
         {/* Wallet Info */}
         <Card className="bg-accent/10 border-accent/20 p-6 mb-8">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-accent/20 flex items-center justify-center">
-                    <Wallet className="w-6 h-6 text-accent" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center sm:text-left">
+                
+                {/* Wallet Info */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-center sm:space-x-4 justify-center sm:justify-start">
+                <div className="w-12 h-12 bg-accent/20 flex items-center justify-center rounded-full mb-2 sm:mb-0">
+                    <Wallet className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-lg">Connected Wallet</h3>
-                    <div className="flex items-center space-x-2">
-                    <code className="text-accent">{formatAddress(walletAddress.address)}</code>
+                    <h3 className="text-base font-medium">Connected Wallet</h3>
+                    <div className="flex items-center justify-center sm:justify-start space-x-2 mt-1">
+                    <code className="text-white text-sm">{formatAddress(walletAddress.address)}</code>
                     <Button size="sm" variant="ghost" onClick={() => copyToClipboard(walletAddress.address)}>
                         <Copy className="w-3 h-3" />
                     </Button>
@@ -136,32 +183,65 @@ export default function UserDashboard() {
                 </div>
                 </div>
 
-                <Badge className="bg-green-500/20 text-green-600 border-green-500/30">
-                <div className="w-2 h-2 bg-green-600 mr-2"></div>
-                Connected
-                </Badge>
-            </div>
-
-            {/* Wallet Balance */}
-            <div className="mt-4 text-right">
-                <h4 className="text-sm text-muted-foreground mb-1">Balance</h4>
-                <div className="text-lg text-accent font-medium">
-                {walletAddress?.balance ?? '0.00'} ETH
+                {/* Balance + Fund Wallet */}
+                <div className="flex flex-col items-center sm:items-center justify-center space-y-1">
+                <h4 className="text-sm text-muted-foreground">Balance</h4>
+                <div className="text-lg text-white font-semibold">
+                    {
+                    balance ? (
+                        <span>{balance} ETH</span>
+                    ) : (
+                        <span className="text-red-500">Loading...</span>
+                    )
+                    }
                 </div>
-                <button onClick={() => fundWallet(walletAddress.address)}>
+                <Button 
+                    variant="outline" 
+                    className="text-sm text-white"
+                    onClick={() => fundWallet(walletAddress.address)}
+                >
                     Fund Wallet
-                </button>
+                </Button>
+                </div>
+
+                {/* Wallet Status */}
+                <div className="flex justify-center items-center">
+                {
+                    userVerified ? (
+                    <Badge className="bg-green-500/20 text-green-600 border-green-500/30 px-4 py-1">
+                        <div className="flex items-center space-x-2">
+                        <LucideBadge className="text-xs text-green-600" />
+                            <span className="text-sm">Verified User</span>
+                        </div>
+                    </Badge>
+                    )
+                    :
+                    (
+                    <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30 px-4 py-1">
+                        <div className="flex items-center space-x-2">
+                        <Shield className="text-xs text-yellow-600" />
+                            <span className="text-sm">Unverified User</span>
+                        </div>
+                        <Button className="text-sm text-red-600"
+                            onClick={() => console.log('Redirect to Self Protocol verification process')}
+                        >
+                            Get Verified
+                        </Button>
+                    </Badge>
+                    )
+                }
+                </div>
+
             </div>
             </Card>
-
 
         {/* Privacy Notice */}
         <Card className="bg-background border-border p-4 mb-8">
             <div className="flex items-start space-x-3">
             <Shield className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
             <div>
-                <h4 className="text-sm text-accent mb-1">Privacy Protected</h4>
-                <p className="text-xs text-muted-foreground">
+                <h4 className="text-sm text-white mb-1">Privacy Protected</h4>
+                <p className="text-xs text-white-foreground">
                 Your purchase history is encrypted and only accessible with your wallet signature. 
                 No personal data is stored on our servers.
                 </p>

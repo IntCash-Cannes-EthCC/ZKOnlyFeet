@@ -4,7 +4,7 @@ import { Hepta_Slab } from "next/font/google";
 import "./globals.css";
 // import { IntMaxClientProvider } from "@/components/contexts/IntMaxClientContext";
 import { Header } from "@/components/Header";
-import { CartSidebar } from "@/components/cart/CartOpened";
+import { CartSidebar } from "@/components/cart/CartSidebar";
 import { PrivyWrapper } from "@/components/providers/privy/PrivyWrapper";
 
 const heptaSlab = Hepta_Slab({
@@ -18,18 +18,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <PrivyWrapper>
+    <html lang="en">
       <body
-        className={`${heptaSlab.variable} antialiased`}
+        className={`${heptaSlab.variable} antialiased dark`}
       >
-        <Header />
-        <CartSidebar />
-          {/* <IntMaxClientProvider> */}
-            {children}
-          {/* </IntMaxClientProvider> */}
+        <PrivyWrapper>
+          <Header />
+          <CartSidebar />
+            {/* <IntMaxClientProvider> */}
+              {children}
+            {/* </IntMaxClientProvider> */}
+        </PrivyWrapper>
       </body>
-      </PrivyWrapper>
     </html>
   );
 }

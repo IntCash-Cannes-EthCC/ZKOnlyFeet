@@ -7,15 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { ProductCard } from '@/components/ProductCard';
 import { Shield, Lock, Zap, Eye, ChevronRight } from 'lucide-react';
 import { useLogin } from '@privy-io/react-auth';
+import { useRouter} from 'next/navigation';
 
-interface HomepageProps {
-  onProductSelect: (product: unknown) => void;
-  onNavigateToMarketplace?: () => void;
-}
-
-export default function Homepage({ onProductSelect, onNavigateToMarketplace }: HomepageProps) {
+export default function Homepage() {
   const { login } = useLogin();
 
+  const router = useRouter();
+  
   const featuredProducts = [
       {
         id: '1',
@@ -34,7 +32,7 @@ export default function Homepage({ onProductSelect, onNavigateToMarketplace }: H
         blockchain: 'Ethereum',
         seller: 'SecureTech',
         views: 500,
-        likes: 120
+        likes: 120,
       },
       {
         id: '2',
@@ -43,7 +41,6 @@ export default function Homepage({ onProductSelect, onNavigateToMarketplace }: H
         image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop',
         tokenId: 'EHW-002',
         category: 'Hardware',
-        tags: ['hardware', 'wallet', 'crypto'],
         isTrending: true,
         blockchain: 'Ethereum',
         seller: 'CryptoVault',
@@ -133,7 +130,8 @@ export default function Homepage({ onProductSelect, onNavigateToMarketplace }: H
               <Button 
                 size="lg"
                 className="bg-accent hover:bg-accent/90 text-white"
-                onClick={onNavigateToMarketplace}
+                onClick={() => { router.push('/marketplace') }
+                }
               >
                 Explore Products
                 <ChevronRight className="w-4 h-4 ml-2" />
@@ -188,7 +186,8 @@ export default function Homepage({ onProductSelect, onNavigateToMarketplace }: H
             <Button 
               variant="outline" 
               className="border-border text-muted-foreground hover:bg-secondary/20"
-              onClick={onNavigateToMarketplace}
+              onClick={() => { router.push('/marketplace') }
+              }
             >
               View All
               <ChevronRight className="w-4 h-4 ml-2" />
@@ -199,7 +198,7 @@ export default function Homepage({ onProductSelect, onNavigateToMarketplace }: H
               <ProductCard
                 key={product.id}
                 product={product}
-                onSelect={onProductSelect}
+                // Remove the onSelect prop as onProductSelect is not defined
               />
             ))}
           </div>
