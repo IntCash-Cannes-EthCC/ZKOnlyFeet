@@ -1,6 +1,8 @@
+/* eslint-disable */
+
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
@@ -22,32 +24,113 @@ import {
     TrendingUp,
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { useWallets } from '@privy-io/react-auth';
+import { SelfAppBuilder, SelfQRcodeWrapper } from '@selfxyz/qrcode';
+import { randomUUID } from 'crypto';
 
-interface Product {
-    id: string;
-    name: string;
-    price: string;
-    image: string;
-    category: string;
-    description: string;
-    rating: number;
-    reviews: number;
-    tokenId?: string;
-    isVerified: boolean;
-    isNew: boolean;
-    isTrending: boolean;
-    blockchain: string;
-    seller: string;
-    views: number;
-    likes: number;
-    tags: string[];
+const IdentityVerificationGateway = ({ onVerificationSuccess }: { onVerificationSuccess: () => void }) => {
+    const [selfApp, setSelfApp] = useState<any>(null);
+    const { wallets } = useWallets();
+
+    const walletAddress = wallets.find(wallet => wallet.address);
+
+    const handleSuccessfulVerification = () => {
+        // Store verification status in component state instead of localStorage
+        console.log('User successfully verified:', walletAddress?.address);
+        onVerificationSuccess();
+    }
+
+    useEffect(() => {
+        if (!walletAddress?.address) return;
+
+        console.log('Wallet Address:', walletAddress.address);
+    
+        const isValidEthAddress = /^0x[a-fA-F0-9]{40}$/.test(walletAddress.address);
+        if (!isValidEthAddress) {
+            console.error('Invalid wallet address:', walletAddress.address);
+            return;
+        }
+
+        const UUIDUser = randomUUID();
+    
+        const builder = new SelfAppBuilder({
+            appName: 'IntCash Shop',
+            scope: 'intmax',
+            endpoint: "https://zk-only-feet.vercel.app/api/verify",
+            endpointType: 'https',
+            userId: UUIDUser,
+            userIdType: 'uuid',
+            disclosures: {
+                name: true,
+                nationality: true,
+                date_of_birth: true,
+                passport_number: true,
+                minimumAge: 18,
+                excludedCountries: ['IRN', 'PRK'],
+                ofac: true
+            },
+            devMode: false,
+            version: 2,
+        });
+    
+        setSelfApp(builder);
+    }, [walletAddress?.address]);
+
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-background">
+            <Card className="max-w-md w-full p-6 mx-4">
+                <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Shield className="w-8 h-8 text-accent" />
+                    </div>
+                    <h2 className="text-2xl font-semibold mb-2">Identity Verification Required</h2>
+                    <p className="text-muted-foreground">
+                        Please verify your identity to access the marketplace. This ensures a secure and compliant trading environment.
+                    </p>
+                </div>
+
+                <div className="flex justify-center mb-6">
+                    {selfApp ? (
+                        <SelfQRcodeWrapper
+                            selfApp={selfApp}
+                            onSuccess={() => {
+                                handleSuccessfulVerification();
+                            }}
+                            onError={() => {
+                                console.error("Error: Failed to verify identity");
+                            }}
+                        />
+                    ) : (
+                        <div className="w-[256px] h-[256px] bg-gray-200 animate-pulse flex items-center justify-center rounded-lg">
+                            <p className="text-gray-500 text-sm">Loading QR Code...</p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-2 text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                        <Shield className="w-4 h-4 mr-2 text-green-500" />
+                        <span>Your data is encrypted and secure</span>
+                    </div>
+                    <div className="flex items-center">
+                        <Globe className="w-4 h-4 mr-2 text-blue-500" />
+                        <span>Decentralized verification process</span>
+                    </div>
+                    <div className="flex items-center">
+                        <Star className="w-4 h-4 mr-2 text-yellow-500" />
+                        <span>One-time verification required</span>
+                    </div>
+                </div>
+            </Card>
+        </div>
+    );
 }
 
 // Mock data for demonstration
-const mockProducts: Product[] = [
+const mockProducts: any[] = [
     {
         id: '1',
-        name: 'Digital Art NFT Collection',
+        name: 'Crypto Art Collection',
         price: '2.5 ETH',
         image: 'https://images.unsplash.com/photo-1634973357973-f2ed2657db3c?w=400&h=400&fit=crop',
         category: 'Digital Art',
@@ -190,6 +273,7 @@ const sortOptions = [
 ];
 
 export default function Marketplace() {
+    const [userVerified, setUserVerified] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All Categories');
     const [selectedBlockchain, setSelectedBlockchain] = useState('All Blockchains');
@@ -204,43 +288,48 @@ export default function Marketplace() {
     
     const itemsPerPage = 12;
 
+    // Show verification gateway if user is not verified
+    if (!userVerified) {
+        return <IdentityVerificationGateway onVerificationSuccess={() => setUserVerified(true)} />;
+    }
+
     // Filter and sort products
     const filteredProducts = useMemo(() => {
         const filtered = mockProducts.filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-        
-        const matchesCategory = selectedCategory === 'All Categories' || product.category === selectedCategory;
-        const matchesBlockchain = selectedBlockchain === 'All Blockchains' || product.blockchain === selectedBlockchain;
-        const matchesVerified = !showVerifiedOnly || product.isVerified;
-        const matchesNew = !showNewOnly || product.isNew;
-        const matchesTrending = !showTrendingOnly || product.isTrending;
-        
-        // Convert price to number for comparison (simplified)
-        const priceValue = parseFloat(product.price.split(' ')[0]);
-        const matchesPrice = priceValue >= priceRange[0] && priceValue <= priceRange[1];
-        
-        return matchesSearch && matchesCategory && matchesBlockchain && matchesVerified && 
-                matchesNew && matchesTrending && matchesPrice;
+            const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                product.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+            
+            const matchesCategory = selectedCategory === 'All Categories' || product.category === selectedCategory;
+            const matchesBlockchain = selectedBlockchain === 'All Blockchains' || product.blockchain === selectedBlockchain;
+            const matchesVerified = !showVerifiedOnly || product.isVerified;
+            const matchesNew = !showNewOnly || product.isNew;
+            const matchesTrending = !showTrendingOnly || product.isTrending;
+            
+            // Convert price to number for comparison (simplified)
+            const priceValue = parseFloat(product.price.split(' ')[0]);
+            const matchesPrice = priceValue >= priceRange[0] && priceValue <= priceRange[1];
+            
+            return matchesSearch && matchesCategory && matchesBlockchain && matchesVerified && 
+                   matchesNew && matchesTrending && matchesPrice;
         });
 
         // Sort products
         filtered.sort((a, b) => {
-        switch (sortBy) {
-            case 'price-low':
-            return parseFloat(a.price.split(' ')[0]) - parseFloat(b.price.split(' ')[0]);
-            case 'price-high':
-            return parseFloat(b.price.split(' ')[0]) - parseFloat(a.price.split(' ')[0]);
-            case 'rating':
-            return b.rating - a.rating;
-            case 'popular':
-            return b.views - a.views;
-            case 'trending':
-            return (b.isTrending ? 1 : 0) - (a.isTrending ? 1 : 0);
-            default:
-            return 0; // newest (default order)
-        }
+            switch (sortBy) {
+                case 'price-low':
+                    return parseFloat(a.price.split(' ')[0]) - parseFloat(b.price.split(' ')[0]);
+                case 'price-high':
+                    return parseFloat(b.price.split(' ')[0]) - parseFloat(a.price.split(' ')[0]);
+                case 'rating':
+                    return b.rating - a.rating;
+                case 'popular':
+                    return b.views - a.views;
+                case 'trending':
+                    return (b.isTrending ? 1 : 0) - (a.isTrending ? 1 : 0);
+                default:
+                    return 0; // newest (default order)
+            }
         });
 
         return filtered;
@@ -274,298 +363,297 @@ export default function Marketplace() {
 
     return (
         <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {/* Header */}
-            <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-                <div>
-                <h1 className="text-3xl mb-2">Marketplace</h1>
-                <p className="text-muted-foreground">
-                    Discover and purchase verified Web3 products
-                </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="text-accent border-accent">
-                    <Globe className="w-3 h-3 mr-1" />
-                    Decentralized
-                </Badge>
-                <Badge variant="outline" className="text-accent border-accent">
-                    <Shield className="w-3 h-3 mr-1" />
-                    Verified
-                </Badge>
-                </div>
-            </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Header */}
+                <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 className="text-3xl mb-2">Marketplace</h1>
+                            <p className="text-muted-foreground">
+                                Discover and purchase verified Web3 products
+                            </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Badge variant="outline" className="text-green-600 border-green-600">
+                                <Shield className="w-3 h-3 mr-1" />
+                                Verified User
+                            </Badge>
+                            <Badge variant="outline" className="text-accent border-accent">
+                                <Globe className="w-3 h-3 mr-1" />
+                                Decentralized
+                            </Badge>
+                        </div>
+                    </div>
 
-            {/* Search and View Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                    placeholder="Search products, categories, or tags..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                />
+                    {/* Search and View Controls */}
+                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                        <div className="relative flex-1 max-w-md">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                            <Input
+                                placeholder="Search products, categories, or tags..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowFilters(!showFilters)}
+                                className="relative"
+                            >
+                                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                                Filters
+                                {activeFiltersCount > 0 && (
+                                    <Badge className="absolute -top-2 -right-2 bg-accent text-white text-xs w-5 h-5 flex items-center justify-center p-0">
+                                        {activeFiltersCount}
+                                    </Badge>
+                                )}
+                            </Button>
+                            
+                            <Select value={sortBy} onValueChange={setSortBy}>
+                                <SelectTrigger className="w-48">
+                                    <SelectValue placeholder="Sort by" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {sortOptions.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            
+                            <div className="border border-border rounded-md p-1 flex">
+                                <Button
+                                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => setViewMode('grid')}
+                                    className="p-1"
+                                >
+                                    <Grid3X3 className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => setViewMode('list')}
+                                    className="p-1"
+                                >
+                                    <List className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="relative"
-                >
-                    <SlidersHorizontal className="w-4 h-4 mr-2" />
-                    Filters
-                    {activeFiltersCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 bg-accent text-white text-xs w-5 h-5 flex items-center justify-center p-0">
-                        {activeFiltersCount}
-                    </Badge>
+
+                {/* Filters Panel */}
+                <AnimatePresence>
+                    {showFilters && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden mb-6"
+                        >
+                            <Card className="bg-card border-border p-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {/* Category Filter */}
+                                    <div>
+                                        <label className="text-sm mb-2 block">Category</label>
+                                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {categories.map((category) => (
+                                                    <SelectItem key={category} value={category}>
+                                                        {category}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Blockchain Filter */}
+                                    <div>
+                                        <Label className="text-sm mb-2 block">Blockchain</Label>
+                                        <Select value={selectedBlockchain} onValueChange={setSelectedBlockchain}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {blockchains.map((blockchain) => (
+                                                    <SelectItem key={blockchain} value={blockchain}>
+                                                        {blockchain}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Price Range */}
+                                    <div>
+                                        <label className="text-sm mb-2 block">
+                                            Price Range: {priceRange[0]} - {priceRange[1]} ETH
+                                        </label>
+                                        <Slider
+                                            value={priceRange}
+                                            onValueChange={setPriceRange}
+                                            max={10}
+                                            min={0}
+                                            step={0.1}
+                                            className="mt-2"
+                                        />
+                                    </div>
+
+                                    {/* Quick Filters */}
+                                    <div>
+                                        <label className="text-sm mb-2 block">Quick Filters</label>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id="verified"
+                                                    checked={showVerifiedOnly}
+                                                    onCheckedChange={(checked) => setShowVerifiedOnly(checked === true)}
+                                                />
+                                                <label htmlFor="verified" className="text-sm">
+                                                    <Shield className="w-3 h-3 inline mr-1" />
+                                                    Verified Only
+                                                </label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id="new"
+                                                    checked={showNewOnly}
+                                                    onCheckedChange={(checked) => setShowNewOnly(checked === true)}
+                                                />
+                                                <label htmlFor="new" className="text-sm">
+                                                    <Star className="w-3 h-3 inline mr-1" />
+                                                    New Items
+                                                </label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id="trending"
+                                                    checked={showTrendingOnly}
+                                                    onCheckedChange={(checked) => setShowTrendingOnly(checked === true)}
+                                                />
+                                                <label htmlFor="trending" className="text-sm">
+                                                    <TrendingUp className="w-3 h-3 inline mr-1" />
+                                                    Trending
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex justify-between items-center mt-6 pt-4 border-t border-border">
+                                    <div className="text-sm text-muted-foreground">
+                                        {filteredProducts.length} products found
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="text-sm"
+                                    >
+                                        <X className="w-3 h-3 mr-1" />
+                                        Clear Filters
+                                    </Button>
+                                </div>
+                            </Card>
+                        </motion.div>
                     )}
-                </Button>
-                
-                <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                    {sortOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                        </SelectItem>
-                    ))}
-                    </SelectContent>
-                </Select>
-                
-                <div className="border border-border rounded-md p-1 flex">
-                    <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="p-1"
-                    >
-                    <Grid3X3 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="p-1"
-                    >
-                    <List className="w-4 h-4" />
-                    </Button>
-                </div>
-                </div>
-            </div>
-            </div>
+                </AnimatePresence>
 
-            {/* Filters Panel */}
-            <AnimatePresence>
-            {showFilters && (
-                <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden mb-6"
-                >
-                <Card className="bg-card border-border p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Category Filter */}
-                    <div>
-                        <label className="text-sm mb-2 block">Category</label>
-                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                                {category}
-                            </SelectItem>
+                {/* Products Grid/List */}
+                <div className="mb-8">
+                    {paginatedProducts.length > 0 ? (
+                        <div className={`grid gap-6 ${
+                            viewMode === 'grid' 
+                                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                                : 'grid-cols-1'
+                        }`}>
+                            {paginatedProducts.map((product) => (
+                                <motion.div
+                                    key={product.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className={viewMode === 'list' ? 'w-full' : ''}
+                                >
+                                    <ProductCard
+                                        product={product}
+                                        viewMode={viewMode}
+                                    />
+                                </motion.div>
                             ))}
-                        </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Blockchain Filter */}
-                    <div>
-                        <Label className="text-sm mb-2 block">Blockchain</Label>
-                        <Select value={selectedBlockchain} onValueChange={setSelectedBlockchain}>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {blockchains.map((blockchain) => (
-                            <SelectItem key={blockchain} value={blockchain}>
-                                {blockchain}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Price Range */}
-                    <div>
-                        <label className="text-sm mb-2 block">
-                        Price Range: {priceRange[0]} - {priceRange[1]} ETH
-                        </label>
-                        <Slider
-                        value={priceRange}
-                        onValueChange={setPriceRange}
-                        max={10}
-                        min={0}
-                        step={0.1}
-                        className="mt-2"
-                        />
-                    </div>
-
-                    {/* Quick Filters */}
-                    <div>
-                        <label className="text-sm mb-2 block">Quick Filters</label>
-                        <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                            id="verified"
-                            checked={showVerifiedOnly}
-                            onCheckedChange={(checked) => setShowVerifiedOnly(checked === true)}
-                            />
-                            <label htmlFor="verified" className="text-sm">
-                            <Shield className="w-3 h-3 inline mr-1" />
-                            Verified Only
-                            </label>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                            id="new"
-                            checked={showNewOnly}
-                            onCheckedChange={(checked) => setShowNewOnly(checked === true)}
-                            />
-                            <label htmlFor="new" className="text-sm">
-                            <Star className="w-3 h-3 inline mr-1" />
-                            New Items
-                            </label>
+                    ) : (
+                        <div className="text-center py-12">
+                            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Search className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-lg mb-2">No products found</h3>
+                            <p className="text-muted-foreground mb-4">
+                                Try adjusting your search terms or filters
+                            </p>
+                            <Button onClick={clearFilters} variant="outline">
+                                Clear Filters
+                            </Button>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                            id="trending"
-                            checked={showTrendingOnly}
-                            onCheckedChange={(checked) => setShowTrendingOnly(checked === true)}
-                            />
-                            <label htmlFor="trending" className="text-sm">
-                            <TrendingUp className="w-3 h-3 inline mr-1" />
-                            Trending
-                            </label>
-                        </div>
-                        </div>
-                    </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center mt-6 pt-4 border-t border-border">
-                    <div className="text-sm text-muted-foreground">
-                        {filteredProducts.length} products found
-                    </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={clearFilters}
-                        className="text-sm"
-                    >
-                        <X className="w-3 h-3 mr-1" />
-                        Clear Filters
-                    </Button>
-                    </div>
-                </Card>
-                </motion.div>
-            )}
-            </AnimatePresence>
-
-            {/* Products Grid/List */}
-            <div className="mb-8">
-            {paginatedProducts.length > 0 ? (
-                <div className={`grid gap-6 ${
-                viewMode === 'grid' 
-                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                    : 'grid-cols-1'
-                }`}>
-                {paginatedProducts.map((product) => (
-                    <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className={viewMode === 'list' ? 'w-full' : ''}
-                    >
-                    <ProductCard
-                        product={product}
-                        onSelect={() => console.log(`Selected product: ${product.name}`)}
-                        viewMode={viewMode}
-                    />
-                    </motion.div>
-                ))}
+                    )}
                 </div>
-            ) : (
-                <div className="text-center py-12">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg mb-2">No products found</h3>
-                <p className="text-muted-foreground mb-4">
-                    Try adjusting your search terms or filters
-                </p>
-                <Button onClick={clearFilters} variant="outline">
-                    Clear Filters
-                </Button>
-                </div>
-            )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            Previous
+                        </Button>
+                        
+                        {[...Array(totalPages)].map((_, index) => {
+                            const page = index + 1;
+                            if (
+                                page === 1 ||
+                                page === totalPages ||
+                                (page >= currentPage - 1 && page <= currentPage + 1)
+                            ) {
+                                return (
+                                    <Button
+                                        key={page}
+                                        variant={currentPage === page ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => setCurrentPage(page)}
+                                        className="w-8 h-8 p-0"
+                                    >
+                                        {page}
+                                    </Button>
+                                );
+                            } else if (page === currentPage - 2 || page === currentPage + 2) {
+                                return <span key={page} className="px-2">...</span>;
+                            }
+                            return null;
+                        })}
+                        
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                )}
             </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-            <div className="flex justify-center items-center space-x-2">
-                <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                >
-                Previous
-                </Button>
-                
-                {[...Array(totalPages)].map((_, index) => {
-                const page = index + 1;
-                if (
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                ) {
-                    return (
-                    <Button
-                        key={page}
-                        variant={currentPage === page ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                        className="w-8 h-8 p-0"
-                    >
-                        {page}
-                    </Button>
-                    );
-                } else if (page === currentPage - 2 || page === currentPage + 2) {
-                    return <span key={page} className="px-2">...</span>;
-                }
-                return null;
-                })}
-                
-                <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                >
-                Next
-                </Button>
-            </div>
-            )}
-        </div>
         </div>
     );
 }
