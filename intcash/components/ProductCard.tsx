@@ -199,7 +199,9 @@ export function ProductCard({ product, onSelect, viewMode = 'grid' }: ProductCar
 
   return (
     <Card className="bg-card border-border overflow-hidden hover:border-accent transition-all duration-300 group cursor-pointer">
-      <div onClick={() => onSelect(product)} className="p-0">
+      <div onSelect={(product) => {
+        console.log('Selected product:', product);
+      }} className="p-0">
         <div className="relative overflow-hidden">
           <ImageWithFallback
             src={product.image}

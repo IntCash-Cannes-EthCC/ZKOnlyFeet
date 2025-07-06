@@ -10,6 +10,11 @@ const IntMaxClientContext = createContext<ReturnType<typeof useIntMaxClient> | n
 
 export const IntMaxClientProvider = ({ children }: { children: ReactNode }) => {
     const value = useIntMaxClient()
+
+    if (!value) {
+        throw new Error('IntMaxClientProvider must be used within an IntMaxClientContext')
+    }
+
     return (
         <IntMaxClientContext.Provider value={value}>
             {children}

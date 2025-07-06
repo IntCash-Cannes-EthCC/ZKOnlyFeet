@@ -13,7 +13,7 @@ export default function Homepage() {
   const { login } = useLogin();
 
   const router = useRouter();
-  
+
   const featuredProducts = [
       {
         id: '1',
@@ -28,7 +28,6 @@ export default function Homepage() {
         isVerified: true,
         isNew: false,
         tags: ['security', 'software', 'privacy'],
-        isTrending: false,
         blockchain: 'Ethereum',
         seller: 'SecureTech',
         views: 500,
@@ -41,12 +40,12 @@ export default function Homepage() {
         image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop',
         tokenId: 'EHW-002',
         category: 'Hardware',
-        isTrending: true,
         blockchain: 'Ethereum',
         seller: 'CryptoVault',
         views: 800,
         likes: 200,
         rating: 4.9,
+        tags: [],
         reviews: 85,
         isVerified: true,
         isNew: true,
@@ -56,7 +55,6 @@ export default function Homepage() {
         id: '3',
         name: 'Private VPN Service',
         tags: ['vpn', 'privacy', 'service'],
-        isTrending: false,
         blockchain: 'Polygon',
         seller: 'PrivacyNet',
         views: 300,
@@ -83,7 +81,11 @@ export default function Homepage() {
         reviews: 150,
         isVerified: true,
         isNew: true,
-        tags: ['email', 'software', 'privacy']
+        tags: ['email', 'software', 'privacy'],
+        blockchain: 'Ethereum',
+        seller: 'PrivacyMail',
+        views: 250,
+        likes: 75
       }
     ];
 
@@ -198,7 +200,7 @@ export default function Homepage() {
               <ProductCard
                 key={product.id}
                 product={product}
-                // Remove the onSelect prop as onProductSelect is not defined
+                onClick={() => { router.push(`/product/${product.id}`) }}
               />
             ))}
           </div>

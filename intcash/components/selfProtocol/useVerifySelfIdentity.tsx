@@ -1,21 +1,29 @@
 import {
     useReadContract,
 } from "wagmi";
+import { sepolia } from "wagmi/chains";
+import { verifyContractABI } from "@/lib/abi";
+import { useWallets } from "@privy-io/react-auth";
 
 export const useVerifySelfIdentity = () => {
+    const { wallets } = useWallets();
+
+    const walletAddress = wallets.find(wallet => wallet.address);
     
     const { data: isVerified, isLoading: isVerifying } = useReadContract({
-        address: process.env.NEXT_PUBLIC_IDENTITY_CONTRACT_ADDRESS as `0x${string}`,
-        abi: [
-            {
-                inputs: [],
-                name: "isVerified",
-                outputs: [{ internalType: "bool", name: "", type: "bool" }],
-                stateMutability: "view",
-                type: "function",
-            },
-        ],
+        address: process.env.NEXT_PUBLIC_IDENTITY_CONTRACT_ADDRESS_SEPOLIA as `0x${string}`,
+        abi: verifyContractABI,
+        chainId: sepolia.id,
         functionName: "isVerified",
+        args: [walletAddress ?? ""],
+    });
+
+    const {data: userData, isLoading: isUserDataLoading} = useReadContract({
+        address: process.env.NEXT_PUBLIC_IDENTITY_CONTRACT_ADDRESS_SEPOLIA as `0x${string}`,
+        abi: verifyContractABI,
+        chainId: sepolia.id,
+        functionName: "getUserInfo",
+        args: [walletAddress ?? ""],
     });
 
     // const { writeContract, isPending: isVerifyingSelf } = useWriteContract({
@@ -35,6 +43,8 @@ export const useVerifySelfIdentity = () => {
     return {
         isVerified,
         isVerifying,
+        userData,
+        isUserDataLoading,
         // verifySelfIdentity: async () => {
         //     try {
         //         await writeContract();

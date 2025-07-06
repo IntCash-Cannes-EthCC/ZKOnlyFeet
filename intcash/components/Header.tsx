@@ -7,6 +7,7 @@ import { Badge } from './ui/badge';
 import { useCartStore } from './contexts/store/cartStore';
 import { Shield, Wallet, User, ShoppingBag, Store, Search, Menu, X } from 'lucide-react';
 import { useLogin, useWallets } from '@privy-io/react-auth';
+import { useLogout } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 
 export function Header() {
@@ -17,7 +18,7 @@ export function Header() {
     const formatAddress = (address: string) => {
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
     };
-
+    const { logout } = useLogout();
     const { login } = useLogin();
     const router = useRouter();
     const { ready, wallets } = useWallets();
@@ -93,7 +94,15 @@ export function Header() {
                                         {walletAddress?.address ? formatAddress(walletAddress.address) : 'N/A'}
                                     </span>
                                 </div>
+                                <Button
+                                    onClick={() => logout()}
+                                    className="bg-accent hover:bg-accent/90 text-white"
+                                >
+                                    <User className="w-4 h-4 mr-2" />
+                                    Logout
+                                </Button>
                             </div>
+
                         ) : (
                             <Button
                                 onClick={login}
@@ -143,8 +152,15 @@ export function Header() {
                             <div className="flex items-center space-x-2 px-3 py-2 bg-secondary/20 rounded-md">
                                 <Wallet className="w-4 h-4 text-accent" />
                                 <span className="text-sm text-muted-foreground">
-                                    {walletAddress?.address ? formatAddress(walletAddress.address) : 'N/A'}
+                                    {walletAddress?.address ? formatAddress(walletAddress.address)  : 'Disconnected'}
                                 </span>
+                                <Button
+                                    onClick={logout}
+                                    className="bg-accent hover:bg-accent/90 text-white"
+                                >
+                                    <User className="w-4 h-4 mr-2" />
+                                    Logout
+                                </Button>
                             </div>
                         ) : (
                             <Button

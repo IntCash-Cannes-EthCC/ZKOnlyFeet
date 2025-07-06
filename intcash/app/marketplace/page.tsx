@@ -21,6 +21,7 @@ import {
     Globe,
     TrendingUp,
 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
 interface Product {
     id: string;
@@ -388,7 +389,7 @@ export default function Marketplace() {
 
                     {/* Blockchain Filter */}
                     <div>
-                        <label className="text-sm mb-2 block">Blockchain</label>
+                        <Label className="text-sm mb-2 block">Blockchain</Label>
                         <Select value={selectedBlockchain} onValueChange={setSelectedBlockchain}>
                         <SelectTrigger>
                             <SelectValue />
