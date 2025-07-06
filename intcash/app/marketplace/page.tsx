@@ -24,9 +24,8 @@ import {
     TrendingUp,
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-import { useWallets } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { SelfAppBuilder, SelfQRcodeWrapper } from '@selfxyz/qrcode';
-import { randomUUID } from 'crypto';
 
 const IdentityVerificationGateway = ({ onVerificationSuccess }: { onVerificationSuccess: () => void }) => {
     const [selfApp, setSelfApp] = useState<any>(null);
@@ -51,7 +50,9 @@ const IdentityVerificationGateway = ({ onVerificationSuccess }: { onVerification
             return;
         }
 
-        const UUIDUser = randomUUID();
+        // convert user address to UUID format
+        const UUIDUser = crypto.randomUUID();
+
     
         const builder = new SelfAppBuilder({
             appName: 'IntCash Shop',
