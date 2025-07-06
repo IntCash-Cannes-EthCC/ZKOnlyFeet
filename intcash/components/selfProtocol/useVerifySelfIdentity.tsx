@@ -26,20 +26,6 @@ export const useVerifySelfIdentity = () => {
         args: [walletAddress ?? ""],
     });
 
-    // const { writeContract, isPending: isVerifyingSelf } = useWriteContract({
-    //     abi: [
-    //         {
-    //             inputs: [],
-    //             name: "verifySelfIdentity",
-    //             outputs: [],
-    //             stateMutability: "nonpayable",
-    //             type: "function",
-    //         },
-    //     ],
-    //     address: process.env.NEXT_PUBLIC_IDENTITY_CONTRACT_ADDRESS as `0x${string}`,
-    //     functionName: "verifySelfIdentity",
-    // });
-
     return {
         isVerified,
         isVerifying,

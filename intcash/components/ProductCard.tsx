@@ -7,7 +7,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useCartStore } from './contexts/store/cartStore';
 import { Shield, Star, Zap, ShoppingBag, Eye, Heart, TrendingUp} from 'lucide-react';
 
-interface ProductCardProps {
+export interface ProductCardProps {
   product: {
     id: string;
     name: string;
@@ -27,11 +27,10 @@ interface ProductCardProps {
     likes: number;
     tags: string[];
   };
-  onSelect: (product: unknown) => void;
   viewMode?: 'grid' | 'list';
 }
 
-export function ProductCard({ product, onSelect, viewMode = 'grid' }: ProductCardProps) {
+export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
   const { addItem } = useCartStore();
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -72,7 +71,7 @@ export function ProductCard({ product, onSelect, viewMode = 'grid' }: ProductCar
   if (viewMode === 'list') {
     return (
       <Card className="bg-card border-border overflow-hidden hover:border-accent transition-all duration-300 group cursor-pointer">
-        <div onClick={() => onSelect(product)} className="p-0">
+        <div>
           <div className="flex">
             <div className="relative w-48 h-32 flex-shrink-0">
               <ImageWithFallback
@@ -167,7 +166,6 @@ export function ProductCard({ product, onSelect, viewMode = 'grid' }: ProductCar
                       className="bg-accent hover:bg-accent/90 text-white"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onSelect(product);
                       }}
                     >
                       View
@@ -305,7 +303,6 @@ export function ProductCard({ product, onSelect, viewMode = 'grid' }: ProductCar
                 className="bg-accent hover:bg-accent/90 text-white text-xs px-2"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSelect(product);
                 }}
               >
                 View
